@@ -48,23 +48,23 @@ assemblyLoop:
 
 try_spawn_apple:
     enter 8, 0
-    mov rdi, 20
+    mov rdi, 2
     call getRand
     cmp eax, 1 ; 5 percent chance 1/20
     jne SPAWN_APPLE_FAIL
 
-    mov rdi, W
+    mov edi, W
     call getRand
     mov dword -4[rbp], eax
 
-    mov rdi, W
+    mov edi, W
     call getRand
     mov dword -8[rbp], eax
 
-    mov eax, W
     xor r8, r8
+    mov eax, W
     mov r8d, dword -4[rbp]; calc the row
-    mul r8
+    mul r8d
 
     add r8d, dword -8[rbp]; add the column
     add r8, apples ;offset
@@ -88,18 +88,34 @@ draw_apples:
         
         
         
-        mov eax, dword -4[rbp]
         xor rdx ,rdx
+        mov eax, dword -4[rbp]
+        mov bx, W
         div bx ; edx contains mod, eax contains div
+        
+        mov r9d, edx ; mul clobbers edx
+        mov r10d, eax
 
-        mov r8, W
-        mul r8
-        mov esi, r8d; ; store the y value
         
-        mov rax, W
-        mul edx
-        mov edi, edx ; store the x value
+        mov eax, W
+        mul r9d
+        mov r9d, eax
+        ;
+        mov eax, W
+        mul r10d
+        mov r10d, eax
         
+        ;mov r8d, W
+        ;mul r8d
+        ;mov esi, eax; ; store the y value
+        ;
+        ;mov rax, W
+        ;mul edx
+        ;mov edi, eax ; store the x value
+        
+        mov edi, r9d ; xpos
+        mov rsi, r10; ypos
+
         mov rdx, W
         mov rcx, W  ; the width and height
         
@@ -226,6 +242,7 @@ update_position:
     up_done:
     mov dword[sn_x], r8d
     mov dword[sn_y], r9d
+    ; todo it underflows on negative
 
     mov eax, dword[sn_x]
     mov ebx, 20

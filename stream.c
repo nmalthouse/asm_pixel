@@ -12,6 +12,7 @@
 #include <SDL3/SDL_main.h>
 
 #include "stdlib.h"
+#include "stdio.h"
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -22,12 +23,23 @@ static SDL_Texture *texture = NULL;
 #define WINDOW_WIDTH 400
 #define WINDOW_HEIGHT 400
 
+#define DEBUG_PRINT 
+
+//it is so awfull that this works.
+//I can see why people hate the preprocessor
+#ifdef DEBUG_PRINT
+#define dprint printf
+#else
+#define dprint //
+#endif
+
 int getRand(int max){
     return rand() % max;
 }
 
 SDL_Surface *surface = NULL;
 void drawRect(int x, int y, int w, int h, int color){
+    dprint("draw rect %d %d %d %d\n", x,y,w,h);
     SDL_Rect r;
     r.x = x;
     r.y = y;
@@ -148,7 +160,9 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     if (SDL_LockTextureToSurface(texture, NULL, &surface)) {
         SDL_Rect r;
         SDL_FillSurfaceRect(surface, NULL, SDL_MapRGB(SDL_GetPixelFormatDetails(surface->format), NULL, 0, 0, 0));  /* make the whole surface black */
+        dprint("begin\n");
         assemblyLoop(TEXTURE_SIZE, TEXTURE_SIZE);
+        dprint("\n\n");
 
         SDL_UnlockTexture(texture);  /* upload the changes (and frees the temporary surface)! */
     }
