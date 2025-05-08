@@ -21,6 +21,28 @@ static SDL_Texture *texture = NULL;
 #define WINDOW_WIDTH 400
 #define WINDOW_HEIGHT 400
 
+SDL_Surface *surface = NULL;
+void drawRect(int x, int y, int w, int h){
+    SDL_Rect r;
+    r.x = x;
+    r.y = y;
+    r.w = w;
+    r.h = h;
+    SDL_FillSurfaceRect(surface, &r, SDL_MapRGB(SDL_GetPixelFormatDetails(surface->format), NULL, 0, 255, 0));  /* make a strip of the surface green */
+}
+
+int KEY_MASK = 0;
+#define KEY_W 0b1;
+#define KEY_A 0b10;
+#define KEY_S 0b100;
+#define KEY_D 0b1000;
+//Return a bitmask representing wasd keystate
+int keymask(){
+    return KEY_MASK;
+}
+
+extern void assemblyLoop(int,int);
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -41,6 +63,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_Log("Couldn't create streaming texture: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
@@ -51,20 +74,49 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
     if (event->type == SDL_EVENT_QUIT) {
         return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
     }
+    switch(event->type){
+        case SDL_EVENT_KEY_DOWN:
+            {
+                int sc = SDL_GetScancodeFromKey(event->key.key, NULL);
+                switch(sc){
+                    case SDL_SCANCODE_W:
+                        KEY_MASK |= KEY_W;
+                        break;
+                    case SDL_SCANCODE_A:
+                        KEY_MASK |= KEY_A;
+                        break;
+                    case SDL_SCANCODE_S:
+                        KEY_MASK |= KEY_S;
+                        break;
+                    case SDL_SCANCODE_D:
+                        KEY_MASK |= KEY_D;
+                        break;
+                }
+                break;
+            }
+        case SDL_EVENT_KEY_UP:
+            {
+                int sc = SDL_GetScancodeFromKey(event->key.key, NULL);
+                switch(sc){
+                    case SDL_SCANCODE_W:
+                        KEY_MASK &= ~KEY_W;
+                        break;
+                    case SDL_SCANCODE_A:
+                        KEY_MASK &= ~KEY_A;
+                        break;
+                    case SDL_SCANCODE_S:
+                        KEY_MASK &= ~KEY_S;
+                        break;
+                    case SDL_SCANCODE_D:
+                        KEY_MASK &= ~KEY_D;
+                        break;
+                }
+                break;
+            }
+    }
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 
-SDL_Surface *surface = NULL;
-void drawRect(int x, int y, int w, int h){
-    SDL_Rect r;
-    r.x = x;
-    r.y = y;
-    r.w = w;
-    r.h = h;
-    SDL_FillSurfaceRect(surface, &r, SDL_MapRGB(SDL_GetPixelFormatDetails(surface->format), NULL, 0, 255, 0));  /* make a strip of the surface green */
-}
-
-extern void assemblyLoop(int,int);
 
 
 /* This function runs once per frame, and is the heart of the program. */
@@ -112,6 +164,9 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     SDL_RenderTexture(renderer, texture, NULL, &dst_rect);
 
     SDL_RenderPresent(renderer);  /* put it all on the screen! */
+
+    //This sucks
+    SDL_Delay(16);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
