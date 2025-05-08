@@ -160,7 +160,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     SDL_RenderPresent(renderer);  /* put it all on the screen! */
 
-    SDL_Delay(50);
+    SDL_Delay(150);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }

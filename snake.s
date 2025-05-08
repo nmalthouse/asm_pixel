@@ -1,4 +1,5 @@
 %define max_snake_len 100
+%define W 20
 
 global my_func
 global assemblyLoop
@@ -12,8 +13,8 @@ extern keymask
 assemblyInit:
     mov byte[direction], 0b10
     mov dword[snake_len], 0
-    mov dword[sn_x], 20
-    mov dword[sn_y], 20
+    mov dword[sn_x], 3
+    mov dword[sn_y], 3
     ret
 
 ; called every frame by driver program
@@ -22,49 +23,100 @@ assemblyInit:
 assemblyLoop: 
     call update_direction
     call update_position
-    mov r8, rsi ; store height
-
-    mov eax, dword [my_g_int]
-    add eax, 10 ; add one to our global var
-    mov dword [my_g_int], eax
-    mov esi, eax ; use our global as the y value of rect
-
-
-        cmp rax, r8
-        jl wrap
-        mov dword [my_g_int], 0
-        wrap:
+    call try_spawn_apple
+    call draw_apples
         
-
-    call keymask
-    and  rax, 0b1 ; is W down
-    
-    cmp rax, 0
-    mov rdi, 10 ; x
-    je set
-    mov rdi, 100
-set:
-
-    ;mov rsi, 10 ; y
-    mov rdx, 100 ; w 
-    mov rcx, 300 ; h
-
-    mov r8, 0x60ba34 ; a nice green color
-    ;call drawRect
-
-    ;call draw_rand_rect
-
 
     ;rdi rsi rdx, rcx r8 r9
     mov edi, dword[sn_x]
     mov esi, dword[sn_y]
-    mov rdx, 20
-    mov rcx, 20
+    mov eax, W
+    mul edi
+    mov edi, eax
+
+    mov eax, W
+    mul esi
+    mov esi, eax
+
+    mov rdx, W
+    mov rcx, W
     mov r8, 0xff00ff;
     call drawRect
 
 
     ret
+
+try_spawn_apple:
+    enter 8, 0
+    mov rdi, 20
+    call getRand
+    cmp eax, 1 ; 5 percent chance 1/20
+    jne SPAWN_APPLE_FAIL
+
+    mov rdi, W
+    call getRand
+    mov dword -4[rbp], eax
+
+    mov rdi, W
+    call getRand
+    mov dword -8[rbp], eax
+
+    mov eax, W
+    xor r8, r8
+    mov r8d, dword -4[rbp]; calc the row
+    mul r8
+
+    add r8d, dword -8[rbp]; add the column
+    add r8, apples ;offset
+    mov byte [r8], 1
+
+
+    SPAWN_APPLE_FAIL:
+    leave
+    ret
+
+draw_apples:
+    enter 4,0
+    mov dword -4[rbp], 0
+    APPLE_LOOP_START:
+        xor r8,r8
+        mov r8d, dword -4[rbp]
+        add r8, apples
+        cmp byte [r8], 1
+        jne DRAW_FIN
+        ;; otherwise we draw it
+        
+        
+        
+        mov eax, dword -4[rbp]
+        xor rdx ,rdx
+        div bx ; edx contains mod, eax contains div
+
+        mov r8, W
+        mul r8
+        mov esi, r8d; ; store the y value
+        
+        mov rax, W
+        mul edx
+        mov edi, edx ; store the x value
+        
+        mov rdx, W
+        mov rcx, W  ; the width and height
+        
+        mov r8, 0x00ffff; color
+        call drawRect
+
+        
+        DRAW_FIN:
+        
+
+        add dword -4[rbp], 1
+        cmp dword -4[rbp], W * W
+        jl APPLE_LOOP_START
+
+    leave
+    ret
+
 
 
 ; arg order is
@@ -174,20 +226,43 @@ update_position:
     up_done:
     mov dword[sn_x], r8d
     mov dword[sn_y], r9d
-    ; clamp the x and y
+
     mov eax, dword[sn_x]
-    cmp eax, 40
-    jle UP_no_set0
-    mov dword[sn_x], 0
-    UP_no_set0: 
+    mov ebx, 20
+    call MOD
+    mov dword[sn_x], eax
 
     mov eax, dword[sn_y]
-    cmp eax, 40
-    jle UP_no_set1
-    mov dword[sn_y], 0
-    UP_no_set1: 
+    mov ebx, 20
+    call MOD
+    mov dword[sn_y], eax
+
     ret
 
+MOD: ;  rax % ebx
+    xor rdx ,rdx
+    div ebx 
+    mov eax, edx
+    ret
+
+
+; clamp value in rax, between zero and rdi
+CLAMP:
+    cmp rax, rdi
+    jge CLAMP_MAX
+    cmp rax, 0
+    jle CLAMP_MIN
+
+    jmp CLAMP_END
+    CLAMP_MAX:
+        mov rax, rdi
+        jmp CLAMP_END
+    CLAMP_MIN:
+        mov rax, 1
+        jmp CLAMP_END
+    CLAMP_END:
+
+    ret
 
 section .bss
 snake: resb max_snake_len
@@ -197,4 +272,4 @@ direction: resb 1
 snake_len: resb 4
 board_size: resb 4
 my_g_int: resb 4
-
+apples: resb (W * W)
