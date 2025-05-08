@@ -22,13 +22,16 @@ static SDL_Texture *texture = NULL;
 #define WINDOW_HEIGHT 400
 
 SDL_Surface *surface = NULL;
-void drawRect(int x, int y, int w, int h){
+void drawRect(int x, int y, int w, int h, int color){
     SDL_Rect r;
     r.x = x;
     r.y = y;
     r.w = w;
     r.h = h;
-    SDL_FillSurfaceRect(surface, &r, SDL_MapRGB(SDL_GetPixelFormatDetails(surface->format), NULL, 0, 255, 0));  /* make a strip of the surface green */
+    SDL_FillSurfaceRect(surface, &r, SDL_MapRGB(SDL_GetPixelFormatDetails(surface->format), NULL, 
+                color >> 16,  // red
+                color << 16 >> (16 + 8),
+                color << (24) >> (24))); 
 }
 
 int KEY_MASK = 0;
@@ -142,11 +145,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         SDL_FillSurfaceRect(surface, NULL, SDL_MapRGB(SDL_GetPixelFormatDetails(surface->format), NULL, 0, 0, 0));  /* make the whole surface black */
         assemblyLoop(TEXTURE_SIZE, TEXTURE_SIZE);
 
-        r.w = TEXTURE_SIZE;
-        r.h = TEXTURE_SIZE / 10;
-        r.x = 0;
-        r.y = (int) (((float) (TEXTURE_SIZE - r.h)) * ((scale + 1.0f) / 2.0f));
-        //SDL_FillSurfaceRect(surface, &r, SDL_MapRGB(SDL_GetPixelFormatDetails(surface->format), NULL, 1, 255, 0));  /* make a strip of the surface green */
         SDL_UnlockTexture(texture);  /* upload the changes (and frees the temporary surface)! */
     }
 
@@ -165,16 +163,15 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     SDL_RenderPresent(renderer);  /* put it all on the screen! */
 
-    //This sucks
+    //Can't figure out how non gl'd sdl does vsync,
+    //we should do something better but it really doesn't matter
     SDL_Delay(16);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 
-/* This function runs once at shutdown. */
 void SDL_AppQuit(void *appstate, SDL_AppResult result)
 {
     SDL_DestroyTexture(texture);
-    /* SDL will clean up the window/renderer for us. */
 }
 
