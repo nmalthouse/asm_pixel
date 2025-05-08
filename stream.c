@@ -145,14 +145,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     const float direction = ((now % 2000) >= 1000) ? 1.0f : -1.0f;
     const float scale = ((float) (((int) (now % 1000)) - 500) / 500.0f) * direction;
 
-    /* To update a streaming texture, you need to lock it first. This gets you access to the pixels.
-       Note that this is considered a _write-only_ operation: the buffer you get from locking
-       might not acutally have the existing contents of the texture, and you have to write to every
-       locked pixel! */
-
-    /* You can use SDL_LockTexture() to get an array of raw pixels, but we're going to use
-       SDL_LockTextureToSurface() here, because it wraps that array in a temporary SDL_Surface,
-       letting us use the surface drawing functions instead of lighting up individual pixels. */
     if (SDL_LockTextureToSurface(texture, NULL, &surface)) {
         SDL_Rect r;
         SDL_FillSurfaceRect(surface, NULL, SDL_MapRGB(SDL_GetPixelFormatDetails(surface->format), NULL, 0, 0, 0));  /* make the whole surface black */
@@ -160,8 +152,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
         SDL_UnlockTexture(texture);  /* upload the changes (and frees the temporary surface)! */
     }
-
-    /* as you can see from this, rendering draws over whatever was drawn before it. */
     SDL_RenderClear(renderer);  /* start with a blank canvas. */
     dst_rect.x = ((float) (WINDOW_WIDTH - TEXTURE_SIZE)) / 2.0f;
     dst_rect.y = ((float) (WINDOW_HEIGHT - TEXTURE_SIZE)) / 2.0f;
@@ -170,9 +160,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     SDL_RenderPresent(renderer);  /* put it all on the screen! */
 
-    //Can't figure out how non gl'd sdl does vsync,
-    //we should do something better but it really doesn't matter
-    //for a 2d game written in assembly, fixed rate makes sense (have fun with dt's)
     SDL_Delay(50);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */

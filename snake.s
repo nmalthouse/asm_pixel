@@ -3,8 +3,6 @@
 global my_func
 global assemblyLoop
 global assemblyInit
-    
-
 
 extern drawRect
 extern getRand
@@ -12,12 +10,18 @@ extern keymask
 
 ; called on program start
 assemblyInit:
+    mov byte[direction], 0b10
+    mov dword[snake_len], 0
+    mov dword[sn_x], 20
+    mov dword[sn_y], 20
     ret
 
 ; called every frame by driver program
 ; in rdi: width of window
 ; in rsi; height of window
 assemblyLoop: 
+    call update_direction
+    call update_position
     mov r8, rsi ; store height
 
     mov eax, dword [my_g_int]
@@ -48,7 +52,17 @@ set:
     mov r8, 0x60ba34 ; a nice green color
     ;call drawRect
 
-    call draw_rand_rect
+    ;call draw_rand_rect
+
+
+    ;rdi rsi rdx, rcx r8 r9
+    mov edi, dword[sn_x]
+    mov esi, dword[sn_y]
+    mov rdx, 20
+    mov rcx, 20
+    mov r8, 0xff00ff;
+    call drawRect
+
 
     ret
 
@@ -88,10 +102,99 @@ my_func:
     ; result in rax, no need to move
     ret
 
+update_direction:
+    call keymask
+    mov r8, rax
+    and r8, 0b1 ; w
+    cmp r8, 0
+    mov r8, 0b1
+    jne UD_set
+
+    mov r8, rax
+    and r8, 0b10 ; a
+    cmp r8, 0
+    mov r8, 0b10
+    jne UD_set
+
+    mov r8, rax
+    and r8, 0b100 ; s
+    cmp r8, 0
+    mov r8, 0b100
+    jne UD_set
+
+    mov r8, rax
+    and r8, 0b1000 ; d
+    cmp r8, 0
+    mov r8, 0b1000
+    jne UD_set
+
+    jmp UD_done
+    UD_set:
+        mov byte [direction], r8b
+        
+    UD_done:
+
+    ret
+
+
+; reads : direction
+; writes: sn_x, sn_y
+; direction:
+;    1 +y
+;   10 -x
+;  100 -y
+; 1000 +x
+update_position:
+    mov r8d, dword[sn_x]
+    mov r9d, dword[sn_y]
+    mov al, byte[direction]
+    cmp rax, 1
+    je up_negy
+    cmp rax, 0b10
+    je up_negx
+    cmp rax, 0b100
+    je up_posy
+    cmp rax, 0b1000
+    je up_posx
+
+    jmp up_done
+        up_posx:
+            add r8d, 1
+            jmp up_done
+        up_negx:
+            sub r8d, 1
+            jmp up_done
+        up_posy:
+            add r9d, 1
+            jmp up_done
+        up_negy:
+            sub r9d, 1
+            jmp up_done
+
+    up_done:
+    mov dword[sn_x], r8d
+    mov dword[sn_y], r9d
+    ; clamp the x and y
+    mov eax, dword[sn_x]
+    cmp eax, 40
+    jle UP_no_set0
+    mov dword[sn_x], 0
+    UP_no_set0: 
+
+    mov eax, dword[sn_y]
+    cmp eax, 40
+    jle UP_no_set1
+    mov dword[sn_y], 0
+    UP_no_set1: 
+    ret
+
 
 section .bss
 snake: resb max_snake_len
-snake_len: resb 8
-board_size: resb 8
+sn_x: resb 4
+sn_y: resb 4
+direction: resb 1
+snake_len: resb 4
+board_size: resb 4
 my_g_int: resb 4
 
