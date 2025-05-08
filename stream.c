@@ -11,6 +11,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+#include "stdlib.h"
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -20,6 +21,10 @@ static SDL_Texture *texture = NULL;
 
 #define WINDOW_WIDTH 400
 #define WINDOW_HEIGHT 400
+
+int getRand(int max){
+    return rand() % max;
+}
 
 SDL_Surface *surface = NULL;
 void drawRect(int x, int y, int w, int h, int color){
@@ -44,11 +49,18 @@ int keymask(){
     return KEY_MASK;
 }
 
+//END THE api
+
 extern void assemblyLoop(int,int);
+extern void assemblyInit();
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
+    srand(0);
+
+    assemblyInit();
+
     SDL_SetAppMetadata("Example Renderer Streaming Textures", "1.0", "com.example.renderer-streaming-textures");
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -56,7 +68,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
-    if (!SDL_CreateWindowAndRenderer("examples/renderer/streaming-textures", WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer)) {
+    if (!SDL_CreateWindowAndRenderer("Asm Game", WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer)) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -67,6 +79,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
@@ -149,13 +162,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     }
 
     /* as you can see from this, rendering draws over whatever was drawn before it. */
-    SDL_SetRenderDrawColor(renderer, 66, 66, 66, SDL_ALPHA_OPAQUE);  /* grey, full alpha */
     SDL_RenderClear(renderer);  /* start with a blank canvas. */
-
-    /* Just draw the static texture a few times. You can think of it like a
-       stamp, there isn't a limit to the number of times you can draw with it. */
-
-    /* Center this one. It'll draw the latest version of the texture we drew while it was locked. */
     dst_rect.x = ((float) (WINDOW_WIDTH - TEXTURE_SIZE)) / 2.0f;
     dst_rect.y = ((float) (WINDOW_HEIGHT - TEXTURE_SIZE)) / 2.0f;
     dst_rect.w = dst_rect.h = (float) TEXTURE_SIZE;
@@ -165,7 +172,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     //Can't figure out how non gl'd sdl does vsync,
     //we should do something better but it really doesn't matter
-    SDL_Delay(16);
+    //for a 2d game written in assembly, fixed rate makes sense (have fun with dt's)
+    SDL_Delay(50);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
