@@ -1,8 +1,12 @@
 global my_func
 global assemblyLoop
+global assemblyInit
 
 extern drawRect
 extern keymask
+
+assemblyInit:
+    ret
 
 ; called every frame by driver program
 ; in rdi: width of window

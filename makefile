@@ -15,5 +15,5 @@ run: bin
 	./stream
 
 clean:
-	rm asm.o
+	rm asm.o snake.o
 
