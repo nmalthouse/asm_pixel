@@ -23,7 +23,7 @@ static SDL_Texture *texture = NULL;
 #define WINDOW_WIDTH 400
 #define WINDOW_HEIGHT 400
 
-#define DEBUG_PRINT 
+//#define DEBUG_PRINT 
 
 //it is so awfull that this works.
 //I can see why people hate the preprocessor
