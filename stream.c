@@ -67,8 +67,7 @@ extern void assemblyLoop(int,int);
 extern void assemblyInit();
 
 /* This function runs once at startup. */
-SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
-{
+SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     srand(0);
 
     assemblyInit();
@@ -97,8 +96,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 }
 
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
-SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
-{
+SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
     if (event->type == SDL_EVENT_QUIT) {
         return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
     }
@@ -148,8 +146,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
 
 /* This function runs once per frame, and is the heart of the program. */
-SDL_AppResult SDL_AppIterate(void *appstate)
-{
+SDL_AppResult SDL_AppIterate(void *appstate) {
     SDL_FRect dst_rect;
     const Uint64 now = SDL_GetTicks();
 
@@ -179,8 +176,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 
-void SDL_AppQuit(void *appstate, SDL_AppResult result)
-{
+void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     SDL_DestroyTexture(texture);
 }
 

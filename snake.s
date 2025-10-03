@@ -11,23 +11,30 @@ extern keymask
 
 ; called on program start
 assemblyInit:
+    enter 0,0
+    
     mov byte[direction], 0b10
     mov dword[snake_len], 0
     mov dword[sn_x], 3
     mov dword[sn_y], 3
+
+    leave
     ret
 
 ; called every frame by driver program
 ; in rdi: width of window
 ; in rsi; height of window
 assemblyLoop: 
+    enter 0,0
     call update_direction
     call update_position
     call try_spawn_apple
     call draw_apples
-        
+
+
 
     ;rdi rsi rdx, rcx r8 r9
+
     mov edi, dword[sn_x]
     mov esi, dword[sn_y]
     mov eax, W
@@ -44,6 +51,7 @@ assemblyLoop:
     call drawRect
 
 
+    leave
     ret
 
 try_spawn_apple:
@@ -76,7 +84,7 @@ try_spawn_apple:
     ret
 
 draw_apples:
-    enter 4,0
+    enter 32,0
     mov dword -4[rbp], 0
     APPLE_LOOP_START:
         xor r8,r8
@@ -138,10 +146,7 @@ draw_apples:
 ; arg order is
 ;rdi rsi rdx, rcx r8 r9
 draw_rand_rect:
-    push rbp
-    mov rbp, rsp
-    sub rsp, 8; two u32, for pos
-
+    enter 8,0
 
     mov rdi, 400
     call getRand
@@ -162,6 +167,7 @@ done:
 
     mov rsp, rbp
     pop rbp
+    leave
     ret
 
 my_func:
